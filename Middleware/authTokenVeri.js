@@ -1,5 +1,5 @@
 
-var config = require('./config');
+var config = require('../Controller/config');
 var jwt = require('jsonwebtoken');
 
 module.exports.verifyToken=(req,res,next)=>{

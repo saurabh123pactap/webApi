@@ -22,14 +22,15 @@ var saltRounds=10;
 var async = require("async");
 var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
 var config = require('./config');
-var upload=require('./upload');
+var upload=require('../Comman/upload');
 var nodemailer = require('nodemailer');
 const path   = require('path');
 var Cryptr=require('cryptr');
 cryptr=new Cryptr('devnami');
 
 //service module require
-var services=require('./services');
+var services=require('../Comman/services');
+const sendMail=require('../services/mail');
 
 const keyPublishable = process.env.STRIP_KEYPUBLISHABLE;
 const keySec = process.env.STRIP_KEYSEC;
@@ -79,45 +80,14 @@ module.exports.Signup=(req,res)=>{
                                         });
                                         res.status(200).send({success: true, auth: true, token: token,message:'you are signup successful'});
                                         console.log('succefull data');
-                                        var transporter = nodemailer.createTransport({
-                                            
-                                          //its comment for heroku app deploye  
-                                            // host: 'smtp.gmail.com',
-                                            // port: 465,
-                                            // secure: true,
-                                            // auth: {
-                                            //     user: 'youremai@gmail.com', // Your email id
-                                            //     pass: 'pwd123' // Your password
-                                            // },
-                                            // tls: {
-                                            //     // do not fail on invalid certs
-                                            //     rejectUnauthorized: false
-                                            // }
-                                            service: 'gmail',
-                                            auth: {
-                                                    user: process.env.SENDER_EMAIL,
-                                                    pass: process.env.SENDER_PASSWORD
-                                                    
-                                               }
-                                        });
-                                        var maillist=[mydata.email, process.env.FROM_EMAIL];
-                                        const mailOptions = {
-                                            from: process.env.FROM_EMAIL, // sender address
-                                            to: maillist, // list of receivers
-                                            subject: 'Sending Email using saurabhProperty',
-                                            text: 'you are success fully signup! in "" ',
-                                            //   + mydata.email + "your password : "+req.body.pass,
-                                            html:'<p>Hello '+mydata.user_name+'</p><p>your user_id and password for <strong>Gero Estate<strong></p><p>Your Email: <span> '+ mydata.email+'</span></p><p>your password :<span>'+req.body.pass+'</span></p><a style="border:1px solid gray;color:white; border-radius:4px; padding-top:10px;padding-bottom:10px;padding-left:5px;padding-right:5px; text-decoration:none;;background-color:#ff8000;" href="http://localhost:5050/api/activateAccount/'+mydata.email+'?account_status='+1+'" >Activate your Account</a> <p>  </p>'
-                                        };                                                                                                                                                                                                                                                                                                                                                                                                               //http://localhost:5050/api/activateAccount?account_status='+1+'&'+'email='+mydata.email+'"  for query parameter
-                                        transporter.sendMail(mailOptions, function (err, info) {
-                                        if(err)
-                                           {
-                                            console.log('error to send mail',err);
-                                           }
-                                        else{
-                                            console.log('Email sent: ' + info.response);
+                                        var sendMsg={
+                                            pass:req.body.pass,
+                                            user_name:req.body.name,
+                                            email:req.body.email,
+                                            html:'<p>Hello '+req.body.name+'</p><p>your user_id and password for <strong>Gero Estate<strong></p><p>Your Email: <span> '+ req.body.email+'</span></p><p>your password :<span>'+req.body.pass+'</span></p><a style="border:1px solid gray;color:white; border-radius:4px; padding-top:10px;padding-bottom:10px;padding-left:5px;padding-right:5px; text-decoration:none;;background-color:#ff8000;" href="http://localhost:5050/api/activateAccount/'+req.body.email+'?account_status='+1+'" >Activate your Account</a> <p>  </p>'
                                         }
-                                        });
+                                        sendMail.sendMail(sendMsg)
+                                        //email send
                                     }).catch((error)=>{
                                         console.log("data not save")
                                         return res.status(401).json({success: false, error: error});
@@ -947,16 +917,15 @@ module.exports.changePasswordOtp=(req,res)=>{
         else{
             user.findOne({email:req.query.email}).then(async (result)=>{ //this async usae for comment await for wait send email result
                 if(result){
-                    var date2 = new Date();
-                    var otpTime=date2.valueOf()
-                    var otp=services.generateOTP();
+                    let date2 = new Date();
+                    let otpTime=date2.valueOf()
+                    let otp=services.generateOTP();
                     // console.log("ggggg",otpTime,otp); 
-                    var sendMsg={
+                    let sendMsg={
                         email:req.query.email,
                         html:'<p><strong>otp valid for 15 min</strong></p></br>'+'<p><strong style="color:red">your otp is</strong> : '+otp+'</p>'
                     }
-            // let result=await services.emailSend(sendMsg) this for wait responce
-                    services.emailSend(sendMsg).then((result)=>{
+                    sendMail.emailSend(sendMsg).then((result)=>{
                            console.log("mail send succeffully",result)
                     })
                     console.log("hello send msg")
