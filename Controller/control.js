@@ -32,8 +32,8 @@ cryptr=new Cryptr('devnami');
 var services=require('./services');
 
 const keyPublishable = process.env.STRIP_KEYPUBLISHABLE;
-const keySecre = process.env.STRIP_KEYSECR;
-var stripe = require('stripe')(keySecre);
+const keySec = process.env.STRIP_KEYSEC;
+var stripe = require('stripe')(keySec);
 
 module.exports.home=(req,res)=>{
     console.log("home ejs file")
