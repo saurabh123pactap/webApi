@@ -1,5 +1,5 @@
 
-var config = require('../Controller/config');
+const {config} = require("../Config/config.js");
 var jwt = require('jsonwebtoken');
 
 module.exports.verifyToken=(req,res,next)=>{
@@ -11,7 +11,7 @@ module.exports.verifyToken=(req,res,next)=>{
       if(token === 'null') {
         return res.status(401).send('Unauthorized request')    
       }
-      let payload = jwt.verify(token, config.secret)
+      let payload = jwt.verify(token, config.get('JWT_TOKEN_SECRET'))
       if(!payload) {
         return res.status(401).send('Unauthorized request') 
       }

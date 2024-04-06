@@ -15,13 +15,12 @@ const Contactus=mongoose.model('Contactus');
 const propertyData=mongoose.model('propertySchema');
 const BillingAddress=mongoose.model('BillingAddress');
 
-
+const {config} = require("../Config/config.js");
 // for sigup use
 var bcrypt = require('bcryptjs');
 var saltRounds=10;
 var async = require("async");
-var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
-var config = require('./config');
+
 var upload=require('../Comman/upload');
 var nodemailer = require('nodemailer');
 const path   = require('path');
@@ -29,11 +28,12 @@ var Cryptr=require('cryptr');
 cryptr=new Cryptr('devnami');
 
 //service module require
+var authentication=require('../Middleware/authGenerate.js');
 var services=require('../Comman/services');
 const sendMail=require('../services/mail');
 
-const keyPublishable = process.env.STRIP_KEYPUBLISHABLE;
-const keySec = process.env.STRIP_KEYSEC;
+const keyPublishable = config.get('STRIP_KEYPUBLISHABLE');
+const keySec = config.get('STRIP_KEYSEC');
 var stripe = require('stripe')(keySec);
 
 module.exports.home=(req,res)=>{
@@ -73,12 +73,9 @@ module.exports.Signup=(req,res)=>{
                                         remember: req.body.remember, 
                                         account_status:0,  
                                     }
+
                                     new user(mydata).save().then((data)=>{
-                                            
-                                        var token = jwt.sign({ id: data._id }, config.secret, {
-                                            expiresIn: 86400 // expires in 24 hours
-                                        });
-                                        res.status(200).send({success: true, auth: true, token: token,message:'you are signup successful'});
+                                        var token = authentication.generateToken(data._id)
                                         console.log('succefull data');
                                         var sendMsg={
                                             pass:req.body.pass,
@@ -88,6 +85,7 @@ module.exports.Signup=(req,res)=>{
                                         }
                                         sendMail.sendMail(sendMsg)
                                         //email send
+                                        res.status(200).send({success: true, auth: true, token: token,message:'you are signup successful'});
                                     }).catch((error)=>{
                                         console.log("data not save")
                                         return res.status(401).json({success: false, error: error});
@@ -158,9 +156,7 @@ module.exports.Login=(req,res)=>{
                             console.log("result find bcrypt",result,error);
                             if(result){
                                 console.log("Sam", result);
-                                var token = jwt.sign({ id: result._id }, config.secret, {
-                                    expiresIn: 86400 // expires in 24 hours
-                                });
+                                var token = authentication.generateToken(result._id)
                                 console.log("tokennnnnnnnnnnnn",token)
                                 res.status(200).send({ auth: true, token: token,data:'login successful' ,user_data});      
                             }
@@ -220,29 +216,36 @@ module.exports.Contactus=(req,res)=>{
             }
             new Contactus(formData).save().then((data)=>{
                 if(data){
-                    var transporter = nodemailer.createTransport({
-                        service: process.env.EMAIL_SERVICE,
-                        auth: {
-                            user: process.env.SENDER_EMAIL,
-                            pass: process.env.SENDER_PASSWORD
-                        }
-                    });
-                    var maillist = [formData.email, process.env.FROM_EMAIL];
-                    var mailOptions = {
-                        from: process.env.FROM_EMAIL,
-                        to: maillist,
-                        subject: 'Sending Email using saurabhProperty',
-                        text: 'contact by ' + formData.email + " " + " " + formData.contact,
+                    // var transporter = nodemailer.createTransport({
+                    //     service: config.EMAIL_SERVICE,
+                    //     auth: {
+                    //         user: config.SENDER_EMAIL,
+                    //         pass: config.SENDER_PASSWORD
+                    //     }
+                    // });
+                    // var maillist = [formData.email, config.FROM_EMAIL];
+                    // var mailOptions = {
+                    //     from: config.FROM_EMAIL,
+                    //     to: maillist,
+                    //     subject: 'Sending Email using saurabhProperty',
+                    //     text: 'contact by ' + formData.email + " " + " " + formData.contact,
 
-                    };
-                    transporter.sendMail(mailOptions, function (error, info) {
-                        if (error) {
-                            console.log(error);
-                        }
-                        else {
-                            console.log('Email sent: ' + info.response);
-                        }
-                    });
+                    // };
+                    // transporter.sendMail(mailOptions, function (error, info) {
+                    //     if (error) {
+                    //         console.log(error);
+                    //     }
+                    //     else {
+                    //         console.log('Email sent: ' + info.response);
+                    //     }
+                    // });
+
+                    var sendMsg={
+                        email:req.body.email,
+                        subject:'Sending Email using saurabhProperty',
+                        html:`contact by ${formData.email } ${formData.contact} `,
+                    }
+                    sendMail.sendMail(sendMsg)
                     return res.status(200).send({data:"success full save contact"});
                 }
                 else{
@@ -269,15 +272,15 @@ module.exports.ForgetPassword=(req,res)=>{
                 console.log("let encrypt", encrypt)
                 console.log("ForgetPassword body12s",data)
                 var transporter = nodemailer.createTransport({
-                    service: process.env.EMAIL_SERVICE,
+                    service: config.get('EMAIL_SERVICE'),
                     auth: {
-                        user: process.env.SENDER_EMAIL,
-                        pass: process.env.SENDER_PASSWORD
+                        user: config.get('SENDER_EMAIL'),
+                        pass: config.get('SENDER_PASSWORD')
                     }
                 });
-                var maillist = [data.email, process.env.FROM_EMAIL];
+                var maillist = [data.email, config.get('FROM_EMAIL')];
                 var mailOptions = {
-                    from: process.env.FROM_EMAIL,
+                    from: config.get('FROM_EMAIL'),
                     to:  maillist,
                     subject: 'Sending Email using Node.js',
                     text: 'you change your password!',
@@ -923,6 +926,7 @@ module.exports.changePasswordOtp=(req,res)=>{
                     // console.log("ggggg",otpTime,otp); 
                     let sendMsg={
                         email:req.query.email,
+                        subject:"Sending Email using saurabhProperty",
                         html:'<p><strong>otp valid for 15 min</strong></p></br>'+'<p><strong style="color:red">your otp is</strong> : '+otp+'</p>'
                     }
                     sendMail.emailSend(sendMsg).then((result)=>{

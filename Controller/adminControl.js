@@ -5,9 +5,7 @@ require('../Database/schema/admin')
 // model require
 var async = require("async");
 const admin=mongoose.model('Admin');
-var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
-var config = require('./config');
-
+var authentication=require('../Middleware/authGenerate');
 module.exports.Admin=(req,res)=>{
     console.log("req,res");
     try{
@@ -27,9 +25,10 @@ module.exports.Admin=(req,res)=>{
                       admin_id:data.admin_id
                   }
                   // res.send({result:data,message:'admin data find'})
-                  var token = jwt.sign({ id: data._id }, config.secret, {
-                      expiresIn: 86400 // expires in 24 hours
-                  });
+                  var token = authentication.generateToken(data._id)
+                //   var token = jwt.sign({ id: data._id }, _config.JWT_TOKEN_SECRET, {
+                //       expiresIn: 86400 // expires in 24 hours
+                //   });
                   console.log("tokennnnnnnnnnnnn",token)
                   res.status(200).send({ auth: true, token: token,message:'admin data find',result:adminData});
                   

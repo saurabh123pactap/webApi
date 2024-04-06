@@ -1,9 +1,10 @@
 
 var moment = require('moment');
-var nodemailer = require('nodemailer');
+
+const {config} = require("../Config/config.js");
 
 const generateOTP=function() {  
-    var digits = process.env.OTP_DIGIT; 
+    var digits = config.get('OTP_DIGIT'); 
     let OTP = ''; 
     for (let i = 0; i < 4; i++ ) { 
         OTP += digits[Math.floor(Math.random() * 10)]; 
@@ -34,6 +35,5 @@ return otpTimeDiff;
    
 module.exports = {
     generateOTP,
-    timediffertent,
-    
+    timediffertent
 };

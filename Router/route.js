@@ -4,7 +4,7 @@ const userControl=require('../Controller/userControl');
 const commanControl=require('../Controller/commanControl');
 const authModule=require('../Middleware/authTokenVeri');
 const adminControl=require('../Controller/adminControl')
-
+const fakeMail=require('../services/fakeMail');
 
 
 router1.get('/',userControl.home);
@@ -44,7 +44,7 @@ router1.all('/api/GetDataby',commanControl.getdataby);
 router1.all('/api/passchange',commanControl.passChange);
 router1.post('/api/excelsheet',commanControl.excelSheet);
 router1.post('/api/csvfile',commanControl.csvFile);
-router1.post('/api/fakemail',commanControl.FakeMail);
+router1.post('/api/fakemail',fakeMail.FakeMail);
 
 // router1.post('/api/formdib',userControl.Formdib);
 

@@ -1,8 +1,10 @@
 const express = require("express");
 const app = express();
 require('dotenv').config();
+
+const {config} = require("./Config/config.js");
 // const port = 5050;
-var port=process.env.PORT || 5050;
+var port=config.get('PORT') || 5050;
 const route1 = require("./Router/route");
 var mongoose = require("mongoose");
 var cors = require("cors");
@@ -13,7 +15,7 @@ var session = require("express-session");
 app.use(cookieParser());
 app.use(
   session({
-    secret: process.env.SECRET,
+    secret: config.get('SESSION_SECRET'),
     resave: false,
     saveUninitialized: true,
     cookie: { secure: true }

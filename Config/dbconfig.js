@@ -1,9 +1,9 @@
 //Import the mongoose module
 var mongoose = require('mongoose');
-
+const {config} = require("../Config/config.js");
 //Set up default mongoose connection
 // var mongoDB ="mongodb+srv://saurabh:saurabh890@cluster0-son5o.mongodb.net/test?retryWrites=true&w=majority"
- var mongoDB = process.env.DB_URL;
+ var mongoDB = config.get('DB_URL');
 mongoose.connect(mongoDB, { useNewUrlParser: true });
 
 //Get the default connection
